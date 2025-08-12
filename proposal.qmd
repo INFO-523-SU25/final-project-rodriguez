@@ -28,6 +28,10 @@ import numpy as np
 
 ## Dataset
 
+This project uses the Credit Card Fraud Detection dataset, containing transactions made by European cardholders over two days in 2013. The dataset includes 284,807 transactions, with only 492 labeled as fraudulent (Class = 1), making it highly imbalanced.
+
+Although the dataset includes labeled anomalies, I am approaching this as an unsupervised anomaly detection task, simulating a real-world scenario where fraudulent examples are not labeled during model training. Labels are withheld during training and used only for model evaluation.
+
 ```{python}
 #| label: load-dataset
 #| include: false
@@ -36,9 +40,11 @@ df_shape = df.shape
 df_preview = df.head()
 ```
 
-This project uses the Credit Card Fraud Detection dataset, containing transactions made by European cardholders over two days in 2013. The dataset includes 284,807 transactions, with only 492 labeled as fraudulent (Class = 1), making it highly imbalanced.
-
-Although the dataset includes labeled anomalies, I am approaching this as an unsupervised anomaly detection task, simulating a real-world scenario where fraudulent examples are not labeled during model training. Labels are withheld during training and used only for model evaluation.
+```{python}
+#| echo: false
+from pathlib import Path
+print(Path("_extra/proposal_data_summary.txt").read_text())
+```
 
 ## Questions
 
@@ -66,3 +72,21 @@ Although the dataset includes labeled anomalies, I am approaching this as an uns
 -   Presentation Prep (August 17–19)
 
     -   Finalize presentation materials and write-up of results.
+
+## Final project organization
+
+```         
+final-project-rodriguez/
+|
+├─ data/
+│  ├─ creditcard.csv
+│  └─ README.md
+|
+├─ about.qmd
+├─ index.qmd
+├─ presentation.qmd
+├─ proposal.qmd
+├─ _quarto.yml
+├─ requirements.txt
+└─ README.md
+```

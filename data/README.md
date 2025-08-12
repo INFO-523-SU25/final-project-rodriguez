@@ -1,15 +1,43 @@
 # Data
--   **[Dataset]**: Description of the dataset 
+-   **[Dataset]**: This project uses the Credit Card Fraud Detection dataset, containing transactions made by European cardholders over two days in 2013. The dataset includes 284,807 transactions. Due to GitHub's 100MB file size limit, the dataset is not included in the repository. You can download it from [Kaggle](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud?resource=download) and place it in the `data/` directory to follow along with the project.
 
 # Codebook for [chosen] Dataset
 
 ## Variable Names and Descriptions:
 
--   **variable**: Description (with units, where applicable)
+- **Variable**: ['Time', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10', 'V11', 'V12', 'V13', 'V14', 'V15', 'V16', 'V17', 'V18', 'V19', 'V20', 'V21', 'V22', 'V23', 'V24', 'V25', 'V26', 'V27', 'V28', 'Amount', 'Class']
 
 ## Data Types:
 
--   **Column**: data type
-
-
-
+- **Column**: 
+- **Time**: float64
+- **V1**: float64
+- **V2**: float64
+- **V3**: float64
+- **V4**: float64
+- **V5**: float64
+- **V6**: float64
+- **V7**: float64
+- **V8**: float64
+- **V9**: float64
+- **V10**: float64
+- **V11**: float64
+- **V12**: float64
+- **V13**: float64
+- **V14**: float64
+- **V15**: float64
+- **V16**: float64
+- **V17**: float64
+- **V18**: float64
+- **V19**: float64
+- **V20**: float64
+- **V21**: float64
+- **V22**: float64
+- **V23**: float64
+- **V24**: float64
+- **V25**: float64
+- **V26**: float64
+- **V27**: float64
+- **V28**: float64
+- **Amount**: float64
+- **Class**: int64
