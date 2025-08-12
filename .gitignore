@@ -13,9 +13,7 @@ _publish/
 _site/*
 
 data/*.csv
-data/*.tsv
-data/*.xlsx
-data/*.parquet
+
 models/
 *.h5
 *.pkl
