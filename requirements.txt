@@ -1,2 +1,5 @@
 jupyter
 nbformat
+pandas
+matplotlib
+statsmodels

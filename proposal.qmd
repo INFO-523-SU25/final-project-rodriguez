@@ -1,11 +1,11 @@
 ---
-title: "Proposal title"
+title: "Detecting Anomalies in Credit Card Transactions"
 subtitle: "Proposal"
 author: 
-  - name: "Team Name - Team member 1, Team member 2,..."
+  - name: "Reilly Rodriguez Spencer"
     affiliations:
       - name: "College of Information Science, University of Arizona"
-description: "Project description"
+description: "Exploring unsupervised anomaly detection methods on imbalanced financial data"
 format:
   html:
     code-tools: true
@@ -21,7 +21,8 @@ jupyter: python3
 
 ```{python}
 #| label: load-pkgs
-#| message: false
+#| include: false
+import pandas as pd
 import numpy as np
 ```
 
@@ -29,17 +30,39 @@ import numpy as np
 
 ```{python}
 #| label: load-dataset
-#| message: false
+#| include: false
+df = pd.read_csv("data/creditcard.csv")
+df_shape = df.shape
+df_preview = df.head()
 ```
 
-A brief description of your dataset including its provenance, dimensions, etc. as well as the reason why you chose this dataset.
+This project uses the Credit Card Fraud Detection dataset, containing transactions made by European cardholders over two days in 2013. The dataset includes 284,807 transactions, with only 492 labeled as fraudulent (Class = 1), making it highly imbalanced.
 
-Make sure to load the data and use inline code for some of this information.
+Although the dataset includes labeled anomalies, I am approaching this as an unsupervised anomaly detection task, simulating a real-world scenario where fraudulent examples are not labeled during model training. Labels are withheld during training and used only for model evaluation.
 
 ## Questions
 
-The two questions you want to answer.
+1.  How well do unsupervised ensemble-based models detect fraudulent transactions when labels are withheld during training?
+2.  How do distance-based and statistical approaches to outlier detection compare to ensemble-based methods in identifying rare but meaningful anomalies?
 
 ## Analysis plan
 
--   A plan for answering each of the questions including the variables involved, variables to be created (if any), external data to be merged in (if any).
+-   Data Preprocessing (August 6–7)
+
+    -   Load and clean the dataset; scale relevant features.
+
+-   Modeling: Unsupervised Learning (August 8–10)
+
+    -   Implement anomaly detection methods.
+
+-   Evaluation (August 11–13)
+
+    -   Assess model performance.
+
+-   Visualization (August 13–16)
+
+    -   Create performance plots and visual summaries of detected anomalies.
+
+-   Presentation Prep (August 17–19)
+
+    -   Finalize presentation materials and write-up of results.

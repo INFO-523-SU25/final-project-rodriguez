@@ -1,11 +1,11 @@
 ---
-title: "Project Title"
+title: "Detecting Anomalies in Credit Card Transactions"
 subtitle: "INFO 523 - Final Project"
 author: 
-  - name: "Team name - Team member 1, Team member 2,..."
+  - name: "Reilly Rodriguez Spencer"
     affiliations:
       - name: "College of Information Science, University of Arizona"
-description: "Project description"
+description: "Exploring unsupervised anomaly detection methods on imbalanced financial data"
 format:
    html:
     code-tools: true
@@ -19,5 +19,3 @@ jupyter: python3
 ---
 
 ## Abstract
-
-Add project abstract here.
