@@ -30,7 +30,7 @@ For my final project I wanted to explore anomaly detection methods, so I chose a
 
 ## Data
 
-This project uses the [Credit Card Fraud Detection dataset](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud), containing transactions made by European cardholders over two days in 2013. The dataset includes 284,807 transactions, with only 492 labeled as fraudulent, making it highly imbalanced. It is important to note that the features V1 through V28 are only numerical input variables, done via PCA transformation. This is due to privacy concerns, per the acknowledgements section on the Kaggle page. The only features that are not transformed are "Time" and "Amount." The "Class" feature is the response variable where a value of 1 refers to a fraudulent transaction and 0 is a valid transaction. 
+This project uses the [Credit Card Fraud Detection dataset](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud), containing transactions made by European cardholders over two days in 2013. The dataset includes 284,807 transactions, with only 492 labeled as fraudulent, making it highly imbalanced. It is important to note that the features V1 through V28 are only numerical input variables, done via PCA transformation. This is due to privacy concerns, per the acknowledgements section on the Kaggle page. The only features that are not transformed are "Time" and "Amount." The "Class" feature is the response variable where a value of 1 refers to a fraudulent transaction and 0 is a valid transaction.
 
 ## Packages
 
@@ -93,13 +93,16 @@ assert "Class" not in X_train.columns and "Class" not in X_test.columns
 
 I use three unsupervised approaches that look at outlierness from different angles. In all cases, larger scores mean the transaction is more suspicious. Labels are withheld during fitting and used only for evaluation.
 
-# Distance-based
+### Distance-based
+
 I start with a plain kNN distance model. Each transaction is scored by the average distance to its 20 nearest neighbors in feature space; larger averages indicate more suspicious cases. Averaging across 20 neighbors reduces sensitivity to any single distance and avoids overly noisy scores.
 
-# Ensemble-based
+### Ensemble-based
+
 Bagged kNN runs the kNN distance scoring 25 times on random 70% subsets and averages the scores. Averaging reduces variance because any single subset can overrepresent or underrepresent patterns, while the mean is steadier. I keep k = 20 to match the base model. This smooths the ranking and, in this case, modestly improves performance on rare events.
 
-# Statistical
+### Statistical
+
 I fit a 3-component Gaussian Mixture Model with full covariance and score each transaction by its negative log-likelihood. A lower likelihood under the model means the point is less typical, so the score is higher and more suspicious. Compared with a pure distance score, the GMM can model elliptical structure and different variances by direction, which suits the PCA-transformed features.
 
 ```{python}
@@ -131,13 +134,14 @@ scores_gmm = -gmm.score_samples(X_test.values)
 ```
 
 ## Evaluation
+
 I evaluated the models in three ways:
 
-1. ROC-AUC. Measures overall ranking quality across all thresholds. This is the probability that a randomly chosen fraudulent transaction receives a higher score than a randomly chosen valid transaction. Higher is better.
+1.  ROC-AUC. Measures overall ranking quality across all thresholds. This is the probability that a randomly chosen fraudulent transaction receives a higher score than a randomly chosen valid transaction. Higher is better.
 
-2. PR-AUC. Focuses on the positive class and is more informative with severe class imbalance. It summarizes the precision–recall trade-off and is the primary metric here given the ~0.17% fraudulent transaction rate.
+2.  PR-AUC. Focuses on the positive class and is more informative with severe class imbalance. It summarizes the precision–recall trade-off and is the primary metric here given the \~0.17% fraudulent transaction rate.
 
-2. [Precision at n](https://link.springer.com/rwe/10.1007/978-0-387-39940-9_484). Sort scores from highest to lowest and look at the first N alerts. I set N to the number of frauds in the test set.
+3.  [Precision at n](https://link.springer.com/rwe/10.1007/978-0-387-39940-9_484). Sort scores from highest to lowest and look at the first N alerts. I set N to the number of frauds in the test set.
 
 Larger values are better for all three metrics. I emphasize PR-AUC and precision at N for imbalanced data, and I include ROC-AUC to show overall ranking strength. Labels are withheld during fitting and used only to compute these metrics.
 
@@ -248,8 +252,9 @@ topn_df
 ```
 
 ## Results
-1.  How well do unsupervised ensemble-based models detect fraudulent transactions when labels are withheld during training?
+
+1.  How well do unsupervised ensemble-based models detect fraudulent transactions when labels are withheld during training? 
 On the held-out test split (85,443 rows; fraud rate 0.173%), the models trained without labels separate fraudulent transactions from valid transactions in a meaningful way. The GMM model attains the highest PR-AUC score (0.137) and the highest precision at N (0.223) when I set `N = int(y_test.sum())` the result is 148, which equals the number of fraudulent transactions in the test set. The kNN distance model, scored as the average distance to the 20 nearest neighbors, achieves the top ROC-AUC (0.955).
 
-2.  How do distance-based and statistical approaches to outlier detection compare to ensemble-based methods in identifying rare but meaningful anomalies?
+2.  How do distance-based and statistical approaches to outlier detection compare to ensemble-based methods in identifying rare but meaningful anomalies? 
 Relative to the distance-based model, Bagged-kNN (25 bags, 70% subsamples; scores averaged) shows a modest and consistent performance improvement on PR-AUC (0.118 vs 0.111) and on precision at 148 (0.189 vs 0.169), which is consistent with variance reduction helping in a rare-event setting. Comparing families, the statistical/density approach (GMM) outperforms both distance-based methods on PR-AUC (0.137) and precision at 148 (0.223), while the distance-based approach (kNN distance) retains the best ROC-AUC (0.955).

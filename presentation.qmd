@@ -40,19 +40,19 @@ execute:
 
 ## Models & Scoring
 
-- Ensemble-based: Bagged-kNN — 25 bags, 70% subsamples, each bag computes kNN distance (k = 20); scores are averaged to reduce variance.
+-   Ensemble-based: Bagged-kNN — 25 bags, 70% subsamples, each bag computes kNN distance (k = 20); scores are averaged to reduce variance.
 
--  Distance-based: kNN distance (k = 20) — anomaly score is the distance to the k-th neighbor.
+-   Distance-based: kNN distance (k = 20) — anomaly score is the distance to the k-th neighbor.
 
-- Statistical: Gaussian Mixture Model (GMM) — n_components = 3, covariance = full; anomaly score is negative log-density via -score_samples
+-   Statistical: Gaussian Mixture Model (GMM) — n_components = 3, covariance = full; anomaly score is negative log-density via -score_samples
 
 ## Evaluation Table
 
-| Model        | ROC-AUC  | PR-AUC  | Top-N Precision |
-|-------------:|:--------:|:-------:|:---------------:|
-| kNN-distance | 0.955179 | 0.111211| 0.169           |
-| Bagged-kNN   | 0.954860 | 0.118200| 0.189           |
-| GMM          | 0.932977 | 0.137379| 0.223           |
+|        Model | ROC-AUC  |  PR-AUC  |   Precision@n   |
+|-------------:|:--------:|:--------:|:---------------:|
+| kNN-distance | 0.955179 | 0.111211 |      0.169      |
+|   Bagged-kNN | 0.954860 | 0.118200 |      0.189      |
+|          GMM | 0.932977 | 0.137379 |      0.223      |
 
 ## Plots
 
