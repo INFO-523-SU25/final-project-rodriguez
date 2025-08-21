@@ -35,6 +35,62 @@
     "text": "Final project organization\nfinal-project-rodriguez/\n|\n├─ data/\n│  ├─ creditcard.csv\n│  └─ README.md\n|\n├─ about.qmd\n├─ index.qmd\n├─ presentation.qmd\n├─ proposal.qmd\n├─ _quarto.yml\n├─ requirements.txt\n└─ README.md"
   },
   {
+    "objectID": "index.html#research-questions",
+    "href": "index.html#research-questions",
+    "title": "Final Project",
+    "section": "Research Questions",
+    "text": "Research Questions\nFor my final project I wanted to explore anomaly detection methods, so I chose a credit card fraud detection dataset. The questions I sought to answer were:\n\nHow well do unsupervised ensemble-based models detect fraudulent transactions when labels are withheld during training?\nHow do distance-based and statistical approaches to outlier detection compare to ensemble-based methods in identifying rare but meaningful anomalies?"
+  },
+  {
+    "objectID": "index.html#data",
+    "href": "index.html#data",
+    "title": "Final Project",
+    "section": "Data",
+    "text": "Data\nThis project uses the Credit Card Fraud Detection dataset, containing transactions made by European cardholders over two days in 2013. The dataset includes 284,807 transactions, with only 492 labeled as fraudulent, making it highly imbalanced. It is important to note that the features V1 through V28 are only numerical input variables, done via PCA transformation. This is due to privacy concerns, per the acknowledgements section on the Kaggle page. The only features that are not transformed are “Time” and “Amount.” The “Class” feature is the response variable where a value of 1 refers to a fraudulent transaction and 0 is a valid transaction."
+  },
+  {
+    "objectID": "index.html#packages",
+    "href": "index.html#packages",
+    "title": "Final Project",
+    "section": "Packages",
+    "text": "Packages\n\nimport numpy as np\nimport pandas as pd\n\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.neighbors import NearestNeighbors\nfrom sklearn.mixture import GaussianMixture\n\nfrom sklearn.metrics import (\n    roc_auc_score, average_precision_score,\n    roc_curve, precision_recall_curve\n)\n\nimport matplotlib.pyplot as plt"
+  },
+  {
+    "objectID": "index.html#dataset-setup",
+    "href": "index.html#dataset-setup",
+    "title": "Final Project",
+    "section": "Dataset Setup",
+    "text": "Dataset Setup\n\n\nFull shape: (284807, 31)\nTime    float64\nV1      float64\nV2      float64\nV3      float64\nV4      float64\ndtype: object\nTotal missing: 0\nTrain shape: (199364, 30) | Test shape: (85443, 30)\nFraud rate (train): 0.001725  (0.173%)\nFraud rate (test):  0.001732  (0.173%)"
+  },
+  {
+    "objectID": "index.html#models-scoring",
+    "href": "index.html#models-scoring",
+    "title": "Final Project",
+    "section": "Models & Scoring",
+    "text": "Models & Scoring\nI use three unsupervised approaches that look at outlierness from different angles. In all cases, larger scores mean the transaction is more suspicious. Labels are withheld during fitting and used only for evaluation."
+  },
+  {
+    "objectID": "index.html#evaluation",
+    "href": "index.html#evaluation",
+    "title": "Final Project",
+    "section": "Evaluation",
+    "text": "Evaluation\nI evaluated the models in three ways:\n\nROC-AUC. Measures overall ranking quality across all thresholds. This is the probability that a randomly chosen fraudulent transaction receives a higher score than a randomly chosen valid transaction. Higher is better.\nPR-AUC. Focuses on the positive class and is more informative with severe class imbalance. It summarizes the precision–recall trade-off and is the primary metric here given the ~0.17% fraudulent transaction rate.\nTop-N precision (precision at N). Sort scores from highest to lowest and look at the first N alerts. I set N to the number of frauds in the test set.\n\nLarger values are better for all three metrics. I emphasize PR-AUC and precision at N for imbalanced data, and I include ROC-AUC to show overall ranking strength. Labels are withheld during fitting and used only to compute these metrics.\n\n\nkNN-distance: ROC AUC=0.9552 | PR AUC=0.1112\nBagged-kNN: ROC AUC=0.9549 | PR AUC=0.1182\nGMM: ROC AUC=0.9330 | PR AUC=0.1374"
+  },
+  {
+    "objectID": "index.html#plots",
+    "href": "index.html#plots",
+    "title": "Final Project",
+    "section": "Plots",
+    "text": "Plots"
+  },
+  {
+    "objectID": "index.html#results",
+    "href": "index.html#results",
+    "title": "Final Project",
+    "section": "Results",
+    "text": "Results\n\nHow well do unsupervised ensemble-based models detect fraudulent transactions when labels are withheld during training? On the held-out test split (85,443 rows; fraud rate 0.173%), the models trained without labels separate fraudulent transactions from valid transactions in a meaningful way. The GMM model attains the highest PR-AUC score (0.137) and the highest precision at N (0.223) when I set N = int(y_test.sum()) the result is 148, which equals the number of fraudulent transactions in the test set. The kNN distance model, scored as the average distance to the 20 nearest neighbors, achieves the top ROC-AUC (0.955).\nHow do distance-based and statistical approaches to outlier detection compare to ensemble-based methods in identifying rare but meaningful anomalies? Relative to the distance-based model, Bagged-kNN (25 bags, 70% subsamples; scores averaged) shows a modest and consistent performance improvement on PR-AUC (0.118 vs 0.111) and on precision at 148 (0.189 vs 0.169), which is consistent with variance reduction helping in a rare-event setting. Comparing families, the statistical/density approach (GMM) outperforms both distance-based methods on PR-AUC (0.137) and precision at 148 (0.223), while the distance-based approach (kNN distance) retains the best ROC-AUC (0.955)."
+  },
+  {
     "objectID": "about.html",
     "href": "about.html",
     "title": "About",
@@ -42,25 +98,32 @@
     "text": "This project was developed by Reilly Rodriguez Spencer For INFO 523 - Data Mining and Discovery at the University of Arizona, taught by Dr. Greg Chism. The team is comprised of the following team members.\n\nReilly Rodriguez Spencer: MS in Data Science major."
   },
   {
-    "objectID": "presentation.html#quarto",
-    "href": "presentation.html#quarto",
+    "objectID": "presentation.html#research-questions",
+    "href": "presentation.html#research-questions",
     "title": "Detecting Anomalies in Credit Card Transactions",
-    "section": "Quarto",
-    "text": "Quarto\n\nThe presentation is created using the Quarto CLI\n## sets the start of a new slide"
+    "section": "Research Questions",
+    "text": "Research Questions\n\nHow well do unsupervised ensemble-based models detect fraudulent transactions when labels are withheld during training?\nHow do distance-based and statistical approaches to outlier detection compare to ensemble-based methods in identifying rare but meaningful anomalies?"
   },
   {
-    "objectID": "presentation.html#layouts",
-    "href": "presentation.html#layouts",
+    "objectID": "presentation.html#data",
+    "href": "presentation.html#data",
     "title": "Detecting Anomalies in Credit Card Transactions",
-    "section": "Layouts",
-    "text": "Layouts\nYou can use plain text\n\n\n\nor bullet points1\n\n\nor in two columns\n\n\nlike\nthis\n\nAnd add footnotes"
+    "section": "Data",
+    "text": "Data\n\nCredit Card Fraud Detection dataset (European cardholders, 2013, two days).\n284,807 transactions; 492 labeled fraud (≈0.172%).\nFeatures: V1–V28 (anonymized via PCA), Time and Amount.\nLabels (Class) withheld during training; used only for evaluation."
   },
   {
-    "objectID": "presentation.html#code",
-    "href": "presentation.html#code",
+    "objectID": "presentation.html#models-scoring",
+    "href": "presentation.html#models-scoring",
     "title": "Detecting Anomalies in Credit Card Transactions",
-    "section": "Code",
-    "text": "Code\n\n\n                            OLS Regression Results                            \n==============================================================================\nDep. Variable:                    mpg   R-squared:                       0.073\nModel:                            OLS   Adj. R-squared:                  0.070\nMethod:                 Least Squares   F-statistic:                     30.59\nDate:                Mon, 11 Aug 2025   Prob (F-statistic):           5.84e-08\nTime:                        21:36:01   Log-Likelihood:                -1346.4\nNo. Observations:                 392   AIC:                             2697.\nDf Residuals:                     390   BIC:                             2705.\nDf Model:                           1                                         \nCovariance Type:            nonrobust                                         \n==============================================================================\n                 coef    std err          t      P&gt;|t|      [0.025      0.975]\n------------------------------------------------------------------------------\nconst         35.8015      2.266     15.800      0.000      31.347      40.257\nspeed       -354.7055     64.129     -5.531      0.000    -480.788    -228.623\n==============================================================================\nOmnibus:                       27.687   Durbin-Watson:                   0.589\nProb(Omnibus):                  0.000   Jarque-Bera (JB):               18.976\nSkew:                           0.420   Prob(JB):                     7.57e-05\nKurtosis:                       2.323   Cond. No.                         169.\n==============================================================================\n\nNotes:\n[1] Standard Errors assume that the covariance matrix of the errors is correctly specified."
+    "section": "Models & Scoring",
+    "text": "Models & Scoring\n\nEnsemble-based: Bagged-kNN — 25 bags, 70% subsamples, each bag computes kNN distance (k = 20); scores are averaged to reduce variance.\nDistance-based: kNN distance (k = 20) — anomaly score is the distance to the k-th neighbor.\nStatistical: Gaussian Mixture Model (GMM) — n_components = 3, covariance = full; anomaly score is negative log-density via -score_samples"
+  },
+  {
+    "objectID": "presentation.html#evaluation-table",
+    "href": "presentation.html#evaluation-table",
+    "title": "Detecting Anomalies in Credit Card Transactions",
+    "section": "Evaluation Table",
+    "text": "Evaluation Table\n\n\n\nModel\nROC-AUC\nPR-AUC\nTop-N Precision\n\n\n\n\nkNN-distance\n0.955179\n0.111211\n0.169\n\n\nBagged-kNN\n0.954860\n0.118200\n0.189\n\n\nGMM\n0.932977\n0.137379\n0.223"
   },
   {
     "objectID": "presentation.html#plots",
@@ -70,38 +133,17 @@
     "text": "Plots"
   },
   {
-    "objectID": "presentation.html#plot-and-text",
-    "href": "presentation.html#plot-and-text",
+    "objectID": "presentation.html#plots-cont.",
+    "href": "presentation.html#plots-cont.",
     "title": "Detecting Anomalies in Credit Card Transactions",
-    "section": "Plot and text",
-    "text": "Plot and text\n\n\n\nSome text\ngoes here"
+    "section": "Plots (cont.)",
+    "text": "Plots (cont.)"
   },
   {
-    "objectID": "presentation.html#tables",
-    "href": "presentation.html#tables",
+    "objectID": "presentation.html#images-used",
+    "href": "presentation.html#images-used",
     "title": "Detecting Anomalies in Credit Card Transactions",
-    "section": "Tables",
-    "text": "Tables\nIf you want to generate a table, make sure it is in the HTML format (instead of Markdown or other formats), e.g.,\n\n\n\n\n\n\n\n\n\n\n\n\nspecies\n\n\n\nisland\n\n\n\nbill_length_mm\n\n\n\nbill_depth_mm\n\n\n\nflipper_length_mm\n\n\n\nbody_mass_g\n\n\n\nsex\n\n\n\n\n\n\n\n\n\n\n\n0\n\n\n\nAdelie\n\n\n\nTorgersen\n\n\n\n39.1\n\n\n\n18.7\n\n\n\n181.0\n\n\n\n3750.0\n\n\n\nMale\n\n\n\n\n\n\n\n1\n\n\n\nAdelie\n\n\n\nTorgersen\n\n\n\n39.5\n\n\n\n17.4\n\n\n\n186.0\n\n\n\n3800.0\n\n\n\nFemale\n\n\n\n\n\n\n\n2\n\n\n\nAdelie\n\n\n\nTorgersen\n\n\n\n40.3\n\n\n\n18.0\n\n\n\n195.0\n\n\n\n3250.0\n\n\n\nFemale\n\n\n\n\n\n\n\n4\n\n\n\nAdelie\n\n\n\nTorgersen\n\n\n\n36.7\n\n\n\n19.3\n\n\n\n193.0\n\n\n\n3450.0\n\n\n\nFemale\n\n\n\n\n\n\n\n5\n\n\n\nAdelie\n\n\n\nTorgersen\n\n\n\n39.3\n\n\n\n20.6\n\n\n\n190.0\n\n\n\n3650.0\n\n\n\nMale"
-  },
-  {
-    "objectID": "presentation.html#images",
-    "href": "presentation.html#images",
-    "title": "Detecting Anomalies in Credit Card Transactions",
-    "section": "Images",
-    "text": "Images\n\nImage credit: Danielle Navarro, Percolate."
-  },
-  {
-    "objectID": "presentation.html#math-expressions",
-    "href": "presentation.html#math-expressions",
-    "title": "Detecting Anomalies in Credit Card Transactions",
-    "section": "Math Expressions",
-    "text": "Math Expressions\nYou can write LaTeX math expressions inside a pair of dollar signs, e.g. $\\alpha+\\beta$ renders \\(\\alpha + \\beta\\). You can use the display style with double dollar signs:\n$$\\bar{X}=\\frac{1}{n}\\sum_{i=1}^nX_i$$\n\\[\n\\bar{X}=\\frac{1}{n}\\sum_{i=1}^nX_i\n\\]\nLimitations:\n\nThe source code of a LaTeX math expression must be in one line, unless it is inside a pair of double dollar signs, in which case the starting $$ must appear in the very beginning of a line, followed immediately by a non-space character, and the ending $$ must be at the end of a line, led by a non-space character;\nThere should not be spaces after the opening $ or before the closing $."
-  },
-  {
-    "objectID": "presentation.html#feeling-adventurous",
-    "href": "presentation.html#feeling-adventurous",
-    "title": "Detecting Anomalies in Credit Card Transactions",
-    "section": "Feeling adventurous?",
-    "text": "Feeling adventurous?\n\nYou are welcomed to use the default styling of the slides. In fact, that’s what I expect majority of you will do. You will differentiate yourself with the content of your presentation.\nBut some of you might want to play around with slide styling. Some solutions for this can be found at https://quarto.org/docs/presentations/revealjs."
+    "section": "Images used",
+    "text": "Images used"
   }
 ]
