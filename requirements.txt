@@ -2,4 +2,5 @@ jupyter
 nbformat
 pandas
 matplotlib
-statsmodels
+scikit-learn
+numpy

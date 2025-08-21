@@ -1,5 +1,5 @@
 ---
-title: "Detecting Anomalies in Credit Card Transactions"
+title: "Final Project"
 subtitle: "INFO 523 - Final Project"
 author: 
   - name: "Reilly Rodriguez Spencer"
@@ -18,4 +18,238 @@ execute:
 jupyter: python3
 ---
 
-## Abstract
+### Write-up
+
+## Research Questions
+
+For my final project I wanted to explore anomaly detection methods, so I chose a credit card fraud detection dataset. The questions I sought to answer were:
+
+1.  **How well do unsupervised ensemble-based models detect fraudulent transactions when labels are withheld during training?**
+2.  **How do distance-based and statistical approaches to outlier detection compare to ensemble-based methods in identifying rare but meaningful anomalies?**
+
+## Data
+
+This project uses the [Credit Card Fraud Detection dataset](https://www.kaggle.com/datasets/mlg-ulb/creditcardfraud), containing transactions made by European cardholders over two days in 2013. The dataset includes 284,807 transactions, with only 492 labeled as fraudulent, making it highly imbalanced. It is important to note that the features V1 through V28 are only numerical input variables, done via PCA transformation. This is due to privacy concerns, per the acknowledgements section on the Kaggle page. The only features that are not transformed are "Time" and "Amount." The "Class" feature is the response variable where a value of 1 refers to a fraudulent transaction and 0 is a valid transaction. 
+
+## Packages
+
+```{python}
+#| label: load-pkgs
+#| echo: true
+
+import numpy as np
+import pandas as pd
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import NearestNeighbors
+from sklearn.mixture import GaussianMixture
+
+from sklearn.metrics import (
+    roc_auc_score, average_precision_score,
+    roc_curve, precision_recall_curve
+)
+
+import matplotlib.pyplot as plt
+```
+
+## Dataset Setup
+
+```{python}
+#| label: data-setup
+#| echo: false
+
+RANDOM_STATE = 42
+
+df = pd.read_csv("data/creditcard.csv")
+
+print("Full shape:", df.shape)
+print(df.dtypes.head())
+print("Total missing:", df.isna().sum().sum())
+
+feature_cols = [c for c in df.columns if c != "Class"]
+X = df[feature_cols].copy()
+y = df["Class"].astype(int).copy()
+
+# Split (labels withheld during training)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.30, stratify=y, random_state=RANDOM_STATE
+)
+
+# Scale Time and Amount using train-only fit
+scaler = StandardScaler().fit(X_train[["Time", "Amount"]])
+X_train[["Time", "Amount"]] = scaler.transform(X_train[["Time", "Amount"]])
+X_test[["Time", "Amount"]]  = scaler.transform(X_test[["Time", "Amount"]])
+
+print("Train shape:", X_train.shape, "| Test shape:", X_test.shape)
+print(f"Fraud rate (train): {y_train.mean():.6f}  ({100*y_train.mean():.3f}%)")
+print(f"Fraud rate (test):  {y_test.mean():.6f}  ({100*y_test.mean():.3f}%)")
+
+assert "Class" not in X_train.columns and "Class" not in X_test.columns
+```
+
+## Models & Scoring
+
+I use three unsupervised approaches that look at outlierness from different angles. In all cases, larger scores mean the transaction is more suspicious. Labels are withheld during fitting and used only for evaluation.
+
+# Distance-based
+I start with a plain kNN distance model. Each transaction is scored by the average distance to its 20 nearest neighbors in feature space; larger averages indicate more suspicious cases. Averaging across 20 neighbors reduces sensitivity to any single distance and avoids overly noisy scores.
+
+# Ensemble-based
+Bagged kNN runs the kNN distance scoring 25 times on random 70% subsets and averages the scores. Averaging reduces variance because any single subset can overrepresent or underrepresent patterns, while the mean is steadier. I keep k = 20 to match the base model. This smooths the ranking and, in this case, modestly improves performance on rare events.
+
+# Statistical
+I fit a 3-component Gaussian Mixture Model with full covariance and score each transaction by its negative log-likelihood. A lower likelihood under the model means the point is less typical, so the score is higher and more suspicious. Compared with a pure distance score, the GMM can model elliptical structure and different variances by direction, which suits the PCA-transformed features.
+
+```{python}
+#| label: models
+#| echo: false
+
+def knn_anomaly_score(X_ref, X_query, n_neighbors=20):
+    """Average distance to the k nearest neighbors."""
+    nn = NearestNeighbors(n_neighbors=n_neighbors)
+    nn.fit(X_ref)
+    dists, _ = nn.kneighbors(X_query, n_neighbors=n_neighbors, return_distance=True)
+    return dists.mean(axis=1)
+
+def bagged_knn_score(X_ref, X_query, n_neighbors=20, n_bags=25, sample_frac=0.7, random_state=RANDOM_STATE):
+    """Bootstrap-aggregate the kNN anomaly score."""
+    rng = np.random.RandomState(random_state)
+    n_ref = X_ref.shape[0]
+    scores = []
+    for _ in range(n_bags):
+        idx = rng.choice(n_ref, size=int(sample_frac * n_ref), replace=True)
+        s_b = knn_anomaly_score(X_ref[idx], X_query, n_neighbors=n_neighbors)
+        scores.append(s_b)
+    return np.vstack(scores).mean(axis=0)
+
+scores_knn = knn_anomaly_score(X_train.values, X_test.values, n_neighbors=20)
+scores_bag = bagged_knn_score(X_train.values, X_test.values, n_neighbors=20, n_bags=25, sample_frac=0.7)
+gmm = GaussianMixture(n_components=3, covariance_type="full", random_state=RANDOM_STATE).fit(X_train.values)
+scores_gmm = -gmm.score_samples(X_test.values)
+```
+
+## Evaluation
+I evaluated the models in three ways:
+
+1. ROC-AUC. Measures overall ranking quality across all thresholds. This is the probability that a randomly chosen fraudulent transaction receives a higher score than a randomly chosen valid transaction. Higher is better.
+
+2. PR-AUC. Focuses on the positive class and is more informative with severe class imbalance. It summarizes the precision–recall trade-off and is the primary metric here given the ~0.17% fraudulent transaction rate.
+
+2. Top-N precision (precision at N). Sort scores from highest to lowest and look at the first N alerts. I set N to the number of frauds in the test set.
+
+Larger values are better for all three metrics. I emphasize PR-AUC and precision at N for imbalanced data, and I include ROC-AUC to show overall ranking strength. Labels are withheld during fitting and used only to compute these metrics.
+
+```{python}
+#| label: eval
+#| echo: false
+
+def evaluate(scores, y_true, label="model"):
+    roc = roc_auc_score(y_true, scores)
+    ap  = average_precision_score(y_true, scores)
+    print(f"{label}: ROC AUC={roc:.4f} | PR AUC={ap:.4f}")
+    fpr, tpr, _ = roc_curve(y_true, scores)
+    prec, rec, _ = precision_recall_curve(y_true, scores)
+    return {"roc": (fpr, tpr), "pr": (rec, prec)}g
+
+curves_knn = evaluate(scores_knn, y_test.values, "kNN-distance")
+curves_bag = evaluate(scores_bag, y_test.values, "Bagged-kNN")
+curves_gmm = evaluate(scores_gmm, y_test.values, "GMM")
+```
+
+## Plots
+
+```{python}
+#| label: plots-roc
+#| echo: false
+
+plt.figure()
+for (name, curves) in [
+    ("kNN-distance", curves_knn),
+    ("GMM", curves_gmm),
+    ("Bagged-kNN", curves_bag),
+]:
+    fpr, tpr = curves["roc"]
+    plt.plot(fpr, tpr, label=name)
+plt.plot([0,1], [0,1], linestyle="--")
+plt.xlabel("False Positive Rate"); plt.ylabel("True Positive Rate")
+plt.title("ROC Curves (Test Set)")
+plt.legend(); plt.tight_layout(); plt.show()
+```
+
+```{python}
+#| label: plots-pr
+#| echo: false
+
+rec_knn,  prec_knn,  _ = precision_recall_curve(y_test, scores_knn)
+rec_gmm,  prec_gmm,  _ = precision_recall_curve(y_test, scores_gmm)
+rec_bag,  prec_bag,  _ = precision_recall_curve(y_test, scores_bag)
+
+prec_knn, rec_knn, _ = precision_recall_curve(y_test, scores_knn)
+prec_gmm, rec_gmm, _ = precision_recall_curve(y_test, scores_gmm)
+prec_bag, rec_bag, _ = precision_recall_curve(y_test, scores_bag)
+
+plt.figure()
+plt.plot(rec_knn, prec_knn, label="kNN-distance")
+plt.plot(rec_gmm, prec_gmm, label="GMM")
+plt.plot(rec_bag, prec_bag, label="Bagged-kNN")
+plt.axhline(y=y_test.mean(), linestyle="--", label=f"Baseline (prevalence={y_test.mean():.4f})")
+plt.xlabel("Recall"); plt.ylabel("Precision")
+plt.title("Precision–Recall Curves (Test Set)")
+plt.legend(); plt.tight_layout(); plt.show()
+```
+
+# Metrics
+
+```{python}
+#| label: metric-table
+#| echo: false
+
+metrics = []
+for name, scores in [
+    ("kNN-distance", scores_knn),
+    ("GMM", scores_gmm),
+    ("Bagged-kNN", scores_bag),
+]:
+    metrics.append({
+        "Model": name,
+        "ROC AUC": roc_auc_score(y_test, scores),
+        "PR AUC":  average_precision_score(y_test, scores),
+        "Prevalence": y_test.mean()
+    })
+pd.DataFrame(metrics).sort_values("PR AUC", ascending=False)
+```
+
+```{python}
+#| label: top-n
+#| echo: false
+
+N = int(y_test.sum())
+
+def topn_precision(scores, y_true, N):
+    idx = np.argsort(scores)[-N:]
+    return float(y_true.iloc[idx].mean())
+
+rows = []
+for name, s in [
+    ("kNN-distance", scores_knn),
+    ("Bagged-kNN",  scores_bag),
+    ("GMM",     scores_gmm),
+]:
+    rows.append({"Model": name, f"Top-{N} Precision": topn_precision(s, y_test, N)})
+
+topn_df = (
+    pd.DataFrame(rows)
+      .sort_values(f"Top-{N} Precision", ascending=False)
+)
+topn_df[f"Top-{N} Precision"] = topn_df[f"Top-{N} Precision"].round(3)
+topn_df
+```
+
+## Results
+1.  How well do unsupervised ensemble-based models detect fraudulent transactions when labels are withheld during training?
+On the held-out test split (85,443 rows; fraud rate 0.173%), the models trained without labels separate fraudulent transactions from valid transactions in a meaningful way. The GMM model attains the highest PR-AUC score (0.137) and the highest precision at N (0.223) when I set `N = int(y_test.sum())` the result is 148, which equals the number of fraudulent transactions in the test set. The kNN distance model, scored as the average distance to the 20 nearest neighbors, achieves the top ROC-AUC (0.955).
+
+
+2.  How do distance-based and statistical approaches to outlier detection compare to ensemble-based methods in identifying rare but meaningful anomalies?
+Relative to the distance-based model, Bagged-kNN (25 bags, 70% subsamples; scores averaged) shows a modest and consistent performance improvement on PR-AUC (0.118 vs 0.111) and on precision at 148 (0.189 vs 0.169), which is consistent with variance reduction helping in a rare-event setting. Comparing families, the statistical/density approach (GMM) outperforms both distance-based methods on PR-AUC (0.137) and precision at 148 (0.223), while the distance-based approach (kNN distance) retains the best ROC-AUC (0.955).
