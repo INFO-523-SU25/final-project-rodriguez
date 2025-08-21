@@ -13,6 +13,7 @@ format:
     embed-resources: true
 editor: visual
 execute:
+  freeze: true
   warning: false
   echo: false
 jupyter: python3
@@ -136,7 +137,7 @@ I evaluated the models in three ways:
 
 2. PR-AUC. Focuses on the positive class and is more informative with severe class imbalance. It summarizes the precision–recall trade-off and is the primary metric here given the ~0.17% fraudulent transaction rate.
 
-2. Top-N precision (precision at N). Sort scores from highest to lowest and look at the first N alerts. I set N to the number of frauds in the test set.
+2. [Precision at n](https://link.springer.com/rwe/10.1007/978-0-387-39940-9_484). Sort scores from highest to lowest and look at the first N alerts. I set N to the number of frauds in the test set.
 
 Larger values are better for all three metrics. I emphasize PR-AUC and precision at N for imbalanced data, and I include ROC-AUC to show overall ranking strength. Labels are withheld during fitting and used only to compute these metrics.
 
@@ -150,7 +151,7 @@ def evaluate(scores, y_true, label="model"):
     print(f"{label}: ROC AUC={roc:.4f} | PR AUC={ap:.4f}")
     fpr, tpr, _ = roc_curve(y_true, scores)
     prec, rec, _ = precision_recall_curve(y_true, scores)
-    return {"roc": (fpr, tpr), "pr": (rec, prec)}g
+    return {"roc": (fpr, tpr), "pr": (rec, prec)}
 
 curves_knn = evaluate(scores_knn, y_test.values, "kNN-distance")
 curves_bag = evaluate(scores_bag, y_test.values, "Bagged-kNN")
@@ -249,7 +250,6 @@ topn_df
 ## Results
 1.  How well do unsupervised ensemble-based models detect fraudulent transactions when labels are withheld during training?
 On the held-out test split (85,443 rows; fraud rate 0.173%), the models trained without labels separate fraudulent transactions from valid transactions in a meaningful way. The GMM model attains the highest PR-AUC score (0.137) and the highest precision at N (0.223) when I set `N = int(y_test.sum())` the result is 148, which equals the number of fraudulent transactions in the test set. The kNN distance model, scored as the average distance to the 20 nearest neighbors, achieves the top ROC-AUC (0.955).
-
 
 2.  How do distance-based and statistical approaches to outlier detection compare to ensemble-based methods in identifying rare but meaningful anomalies?
 Relative to the distance-based model, Bagged-kNN (25 bags, 70% subsamples; scores averaged) shows a modest and consistent performance improvement on PR-AUC (0.118 vs 0.111) and on precision at 148 (0.189 vs 0.169), which is consistent with variance reduction helping in a rare-event setting. Comparing families, the statistical/density approach (GMM) outperforms both distance-based methods on PR-AUC (0.137) and precision at 148 (0.223), while the distance-based approach (kNN distance) retains the best ROC-AUC (0.955).
